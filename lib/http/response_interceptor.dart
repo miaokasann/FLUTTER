@@ -3,33 +3,50 @@ import 'result_data.dart';
 
 class ResponseInterceptors extends InterceptorsWrapper {
   @override
-  onResponse(Response response) async {
-    RequestOptions option = response.request;
+  void onResponse(Response res, ResponseInterceptorHandler handler) {
+    RequestOptions option = res.requestOptions;
+    // print("---------response.data----------");
+    // print(response.data);
+    // print("---------response.data end----------");
+    String? type = option.contentType;
     try {
-      if (option.contentType != null && option.contentType.contains("text")) {
-        return new ResultData(response.data, true, 200);
+      if (type != null && type.contains("text")) {
+        res.data = ResultData(res.data, true, 200);
+        handler.next(res);
       }
 
       ///一般只需要处理200的情况，300、400、500保留错误信息，外层为http协议定义的响应码
-      if (response.statusCode == 200 || response.statusCode == 201) {
+      if (res.statusCode == 200 || res.statusCode == 201) {
         ///内层需要根据公司实际返回结构解析，一般会有code，data，msg字段
-        int code = response.data["code"];
+
+        int code = res.data["code"];
         if (code == 200) {
-          return new ResultData(response.data, true, 200,
-              headers: response.headers);
+          res.data = ResultData(res.data, true, 200,
+              headers: res.headers);
+          handler.next(res);
+
+          // print("----------response.data----------");
+          // print(response.data);
+          // print("----------response.data end----------");
+
+          return;
         } else {
-          return new ResultData(response.data, false, 200,
-              headers: response.headers);
+          res.data = ResultData(res.data, false, 200,
+              headers: res.headers);
+          handler.next(res);
+          return;
         }
       }
     } catch (e) {
-      print(e.toString() + option.path);
-
-      return new ResultData(response.data, false, response.statusCode,
-          headers: response.headers);
+      print("ResponseError====" + e.toString() + "****" + option.path);
+      res.data = ResultData(res.data, false, res.statusCode,
+          headers: res.headers);
+      handler.next(res);
+      return;
     }
 
-    return new ResultData(response.data, false, response.statusCode,
-        headers: response.headers);
+    res.data =
+        ResultData(res.data, false, res.statusCode, headers: res.headers);
+    handler.next(res);
   }
 }

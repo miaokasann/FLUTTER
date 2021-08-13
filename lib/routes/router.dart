@@ -8,7 +8,7 @@ final routes = {
 };
 
 var onGenerateRoute = (RouteSettings settings) {
-  final String name = settings.name;
+  final String? name = settings.name;
   final Function pageContentBuilder = routes[name] as Function;
   if (pageContentBuilder != null) {
     if (settings.arguments != null) {

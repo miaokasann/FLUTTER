@@ -8,21 +8,35 @@ import 'address.dart';
 
 class HttpManager {
   static HttpManager _instance = HttpManager._internal();
-  Dio _dio;
+  Dio? _dio;
 
   static const CODE_SUCCESS = 200;
   static const CODE_TIME_OUT = -1;
+  static const CONNECT_TIMEOUT = 15000;
+  static const RECEIVE_TIMEOUT = 15000;
+
+  /// 自定义Header
+  Map<String, dynamic> httpHeaders = {
+
+  };
 
   factory HttpManager() => _instance;
 
   ///通用全局单例，第一次使用时初始化
-  HttpManager._internal({String baseUrl = ""}) {
+  HttpManager._internal({String? baseUrl}) {
     if (null == _dio) {
-      _dio = Dio(
-          new BaseOptions(baseUrl: Address.BASE_URL, connectTimeout: 15000));
-      _dio?.interceptors.add(new DioLogInterceptor());
-//      _dio.interceptors.add(new PrettyDioLogger());
-      _dio?.interceptors.add(new ResponseInterceptors());
+      _dio = Dio(BaseOptions(
+        baseUrl: Address.BASE_URL,
+        connectTimeout: CONNECT_TIMEOUT,
+        receiveTimeout: RECEIVE_TIMEOUT,
+        headers: httpHeaders,
+        validateStatus: (status) {
+          // 不使用http状态码判断状态，使用AdapterInterceptor来处理（适用于标准REST风格）
+          return true;
+        },
+      ));
+      // _dio?.interceptors.add(DioLogInterceptor());
+      _dio?.interceptors.add(ResponseInterceptors());
     }
   }
 
@@ -54,14 +68,15 @@ class HttpManager {
 
   ///通用的GET请求
   get(api, {params, withLoading = true}) async {
-    // if (withLoading) {
-    //   LoadingUtils.show();
-    // }
-    print('get请求');
-    Response response;
+    if (withLoading) {
+      LoadingUtils.show();
+    }
+
+    Response? res;
+    final Options options = Options(method: "get", headers: httpHeaders);
     try {
-      response = await _dio.get(api, queryParameters: params);
-      print('response:${response}');
+      res = await _dio?.get(api, queryParameters: params, options: options);
+      print('response:${res}');
       if (withLoading) {
         LoadingUtils.dismiss();
       }
@@ -72,11 +87,30 @@ class HttpManager {
       return resultError(e);
     }
 
-    if (response.data is DioError) {
-      return resultError(response.data['code']);
+    if (res?.data is DioError) {
+      return resultError(res?.data['code']);
     }
 
-    return response.data;
+    return res?.data;
+
+    // try {
+    //   response = await _dio.get(api, queryParameters: params);
+    //   print('response:${response}');
+    //   if (withLoading) {
+    //     LoadingUtils.dismiss();
+    //   }
+    // } on DioError catch (e) {
+    //   if (withLoading) {
+    //     LoadingUtils.dismiss();
+    //   }
+    //   return resultError(e);
+    // }
+    //
+    // if (response.data is DioError) {
+    //   return resultError(response.data['code']);
+    // }
+    //
+    // return response.data;
   }
 
   ///通用的POST请求
@@ -85,10 +119,10 @@ class HttpManager {
       LoadingUtils.show();
     }
 
-    Response response;
+    Response? res;
 
     try {
-      response = await _dio.post(api, data: params);
+      res = await _dio?.post(api, data: params);
       if (withLoading) {
         LoadingUtils.dismiss();
       }
@@ -99,25 +133,26 @@ class HttpManager {
       return resultError(e);
     }
 
-    if (response.data is DioError) {
-      return resultError(response.data['code']);
+    if (res?.data is DioError) {
+      return resultError(res?.data['code']);
     }
 
-    return response.data;
+    return res?.data;
   }
 }
 
 ResultData resultError(DioError e) {
-  Response errorResponse;
+  Response? errorResponse;
   if (e.response != null) {
     errorResponse = e.response;
-  } else {
-    errorResponse = new Response(statusCode: 666);
   }
-  if (e.type == DioErrorType.CONNECT_TIMEOUT ||
-      e.type == DioErrorType.RECEIVE_TIMEOUT) {
-    errorResponse.statusCode = Code.NETWORK_TIMEOUT;
+  // else {
+  //   errorResponse = Response(requestOptions: e.response.request, statusCode: 666);
+  // }
+  if (e.type == HttpManager.CONNECT_TIMEOUT ||
+      e.type == HttpManager.RECEIVE_TIMEOUT) {
+    errorResponse?.statusCode = Code.NETWORK_TIMEOUT;
   }
-  return new ResultData(
-      errorResponse.statusMessage, false, errorResponse.statusCode);
+  return ResultData(
+      errorResponse?.statusMessage, false, errorResponse?.statusCode);
 }

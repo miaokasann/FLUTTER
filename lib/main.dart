@@ -10,12 +10,15 @@ import 'package:flutterdemo/pages/mine.dart';
 //路由
 import 'routes/router.dart';
 
+
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+
 void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({Key key}) : super(key: key);
+  MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +35,7 @@ class MyApp extends StatelessWidget {
 }
 
 class IndexPage extends StatefulWidget {
-  const IndexPage({Key key}) : super(key: key);
+  const IndexPage({Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -53,49 +56,51 @@ class _IndexState extends State<IndexPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: PreferredSize(
-        preferredSize:
-            Size.fromHeight(MediaQuery.of(context).size.height * 0.07),
-        child: SafeArea(
-          top: true,
-          child: Offstage(),
+    return FlutterEasyLoading(
+      child: Scaffold(
+        appBar: PreferredSize(
+          preferredSize:
+          Size.fromHeight(MediaQuery.of(context).size.height * 0.07),
+          child: SafeArea(
+            top: true,
+            child: Offstage(),
+          ),
         ),
-      ),
-      // appBar: AppBar(
-      //     backgroundColor: Colors.white, title: HomeAppBar(), elevation: 1),
-      body: pages[currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        unselectedItemColor: Colors.grey,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home,
-                color: currentIndex == 0 ? Colors.red : Colors.grey),
-            label: "首页",
-          ),
-          BottomNavigationBarItem(
-            backgroundColor: Colors.white,
-            icon: Icon(Icons.message,
-                color: currentIndex == 1 ? Colors.red : Colors.grey),
-            label: "广场",
-          ),
-          BottomNavigationBarItem(
-            backgroundColor: Colors.white,
-            icon: Icon(Icons.person,
-                color: currentIndex == 2 ? Colors.red : Colors.grey),
-            label: "我的",
-          )
-        ],
-        currentIndex: currentIndex,
-        unselectedLabelStyle: const TextStyle(color: Colors.grey),
-        selectedLabelStyle: const TextStyle(color: Colors.red),
-        selectedItemColor: Colors.red,
-        // type: BottomNavigationBarType.shifting,
-        onTap: (index) {
-          _changePage(index);
-        },
-      ),
+        // appBar: AppBar(
+        //     backgroundColor: Colors.white, title: HomeAppBar(), elevation: 1),
+        body: pages[currentIndex],
+        bottomNavigationBar: BottomNavigationBar(
+          backgroundColor: Colors.white,
+          unselectedItemColor: Colors.grey,
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home,
+                  color: currentIndex == 0 ? Colors.red : Colors.grey),
+              label: "首页",
+            ),
+            BottomNavigationBarItem(
+              backgroundColor: Colors.white,
+              icon: Icon(Icons.message,
+                  color: currentIndex == 1 ? Colors.red : Colors.grey),
+              label: "广场",
+            ),
+            BottomNavigationBarItem(
+              backgroundColor: Colors.white,
+              icon: Icon(Icons.person,
+                  color: currentIndex == 2 ? Colors.red : Colors.grey),
+              label: "我的",
+            )
+          ],
+          currentIndex: currentIndex,
+          unselectedLabelStyle: const TextStyle(color: Colors.grey),
+          selectedLabelStyle: const TextStyle(color: Colors.red),
+          selectedItemColor: Colors.red,
+          // type: BottomNavigationBarType.shifting,
+          onTap: (index) {
+            _changePage(index);
+          },
+        ),
+      )
     );
   }
 
